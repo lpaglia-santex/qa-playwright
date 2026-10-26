@@ -26,23 +26,12 @@ test.describe('Checkout', () => {
     // 2. Click 'Proceed to checkout'. Fill billing address. Click 'Proceed to checkout'.
     await page.getByRole('button', { name: 'Proceed to checkout' }).click();
     await expect(page.getByRole('heading', { name: 'Billing Address' })).toBeVisible();
-    // Jane's saved address loads asynchronously and the postcode lookup rewrites street/city/state,
-    // so fill in lookup order and retry until our values stick (otherwise the invoice POST gets a 422).
-    await expect(async () => {
-      const lookup = page
-        .waitForResponse((r) => r.url().includes('/postcode-lookup'), { timeout: 5000 })
-        .catch(() => {});
-      await page.getByLabel('Country').selectOption({ label: 'United States of America (the)' });
-      await page.getByLabel('Postal code').fill('78701');
-      await page.getByLabel('House number').fill('1');
-      await lookup;
-      await page.getByLabel('Street').fill('Main St');
-      await page.getByLabel('City').fill('Austin');
-      await page.getByLabel('State').fill('TX');
-      await expect(page.getByLabel('Postal code')).toHaveValue('78701', { timeout: 1000 });
-      await expect(page.getByLabel('Street')).toHaveValue('Main St', { timeout: 1000 });
-      await expect(page.getByLabel('City')).toHaveValue('Austin', { timeout: 1000 });
-    }).toPass({ timeout: 20000 });
+    await page.getByLabel('Country').selectOption({ label: 'United States of America (the)' });
+    await page.getByLabel('Postal code').fill('78701');
+    await page.getByLabel('House number').fill('1');
+    await page.getByLabel('Street').fill('Main St');
+    await page.getByLabel('City').fill('Austin');
+    await page.getByLabel('State').fill('TX');
     await page.getByRole('button', { name: 'Proceed to checkout' }).click();
 
     const paymentMethod = page.getByLabel('Payment Method');
