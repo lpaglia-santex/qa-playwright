@@ -22,17 +22,20 @@ test.describe("Checkout", () => {
       signInPanel.getByRole("heading", { name: "Continue as Guest" }),
     ).toBeVisible();
 
-    await page.getByText("Billing Address", { exact: true }).click();
+    // Step labels are scoped to the indicator: "Billing Address" also matches a hidden <h3>.
+    // Locked steps ignore pointer events, so force the click like a user tapping them would.
+    const steps = page.locator(".steps-indicator");
+    await steps.getByText("Billing Address", { exact: true }).click({ force: true });
     await expect(
       signInPanel.getByRole("heading", { name: "Continue as Guest" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Postal code")).toHaveCount(0);
+    await expect(page.getByLabel("Postal code")).toBeHidden();
 
-    await page.getByText("Payment", { exact: true }).click();
+    await steps.getByText("Payment", { exact: true }).click({ force: true });
     await expect(
       signInPanel.getByRole("heading", { name: "Continue as Guest" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Payment Method")).toHaveCount(0);
+    await expect(page.getByLabel("Payment Method")).toBeHidden();
 
     // 2. Add product while logged out, then log in via the Sign in tab.
     await page.getByRole("tab", { name: "Sign in" }).click();
@@ -50,7 +53,7 @@ test.describe("Checkout", () => {
     await expect(page.getByTestId("cart-quantity")).toHaveText("1");
 
     // 3. Go back to Cart step via the 'Cart' label, change quantity, return forward.
-    await page.getByText("Cart", { exact: true }).click();
+    await steps.getByText("Cart", { exact: true }).click();
     const quantity = page.getByRole("spinbutton", {
       name: "Quantity for Combination Pliers",
     });
@@ -75,7 +78,7 @@ test.describe("Checkout", () => {
       page.getByRole("heading", { name: "Billing Address" }),
     ).toBeVisible();
 
-    await page.getByText("Cart", { exact: true }).click();
+    await steps.getByText("Cart", { exact: true }).click();
     await expect(quantity).toHaveValue("3");
     await expect(page.getByTestId("cart-total")).toHaveText("$42.45");
     await expect(page.getByTestId("cart-quantity")).toHaveText("3");

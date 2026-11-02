@@ -82,13 +82,15 @@ test.describe("Checkout", () => {
     await expect(page.getByText("Payment was successful")).toBeVisible();
 
     // 2. Simulate an expired session: the API answers 401 to the order request, then click Confirm.
-    await page.route("**/invoices", (route) =>
+    // Guest orders are posted to /invoices/guest; logged-in ones to /invoices.
+    const invoicesUrl = /\/invoices(\/guest)?$/;
+    await page.route(invoicesUrl, (route) =>
       route.request().method() === "POST"
         ? route.fulfill({ status: 401, json: { message: "Unauthorized" } })
         : route.continue(),
     );
     const invoiceResponse = page.waitForResponse(
-      (r) => r.url().endsWith("/invoices") && r.request().method() === "POST",
+      (r) => invoicesUrl.test(r.url()) && r.request().method() === "POST",
     );
     await page.getByRole("button", { name: "Confirm" }).click();
     expect((await invoiceResponse).status()).toBe(401);
